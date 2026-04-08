@@ -293,21 +293,59 @@
 //  server.handleClient();
 // }
 
-#define RELAY 23
+// #define RELAY 23
+
+// void setup() {
+//   pinMode(RELAY, OUTPUT);
+//   digitalWrite(RELAY, HIGH);   // start OFF
+// }
+
+// void loop() {
+
+//   // Pump ON
+//   digitalWrite(RELAY, LOW);
+//   delay(5000);
+
+//   // Pump OFF
+//   digitalWrite(RELAY, HIGH);
+//   delay(5000);
+
+// }
+
+
+//MG995 servo Motor
+
+#define IN1 18
+#define IN2 19
+#define ENA 5
 
 void setup() {
-  pinMode(RELAY, OUTPUT);
-  digitalWrite(RELAY, HIGH);   // start OFF
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(ENA, OUTPUT);
+
+  digitalWrite(ENA, HIGH);   // enable motor driver
 }
 
 void loop() {
 
-  // Pump ON
-  digitalWrite(RELAY, LOW);
+  // Clockwise
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
   delay(5000);
 
-  // Pump OFF
-  digitalWrite(RELAY, HIGH);
+  // Stop
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  delay(2000);
+
+  // Anticlockwise
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
   delay(5000);
 
+  // Stop
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  delay(2000);
 }

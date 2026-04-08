@@ -4,7 +4,7 @@ import 'package:monitor/providers/bed_provider.dart';
 import 'package:monitor/models/bed_model.dart';
 import 'package:monitor/utils/colors.dart';
 import 'package:monitor/screens/bed_control_screen.dart';
-import 'package:monitor/widgets/bed_card.dart';
+import 'package:monitor/widgets/app_drawer.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -14,7 +14,12 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // 📊 LOCAL MOCK DATA for dashboard overview
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // Theme mode state
+  bool _isDarkMode = false;
+
+  // 📊 6 Mock Beds with all features
   final List<Map<String, dynamic>> _mockBeds = [
     {
       'id': 'bed_1',
@@ -129,7 +134,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // System metrics
   final Map<String, dynamic> _systemMetrics = {
     'totalWorms': 5700,
-    'totalCompost': 124.5, // kg
+    'totalCompost': 124.5,
     'activeTime': '156h',
     'efficiency': 94,
     'alerts': 3,
@@ -227,242 +232,803 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .where((b) => b['status'] == BedStatus.error)
         .length;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() {});
-          await Future.delayed(const Duration(seconds: 1));
-        },
-        color: AppColors.primary,
-        child: CustomScrollView(
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: _isDarkMode ? _darkTheme() : _lightTheme(),
+      home: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: _isDarkMode
+            ? AppColors.backgroundDark
+            : AppColors.background,
+        drawer: AppDrawer(
+          currentRoute: '/dashboard',
+          onNavigate: (route) {
+            Navigator.pop(context);
+            Navigator.pushReplacementNamed(context, route);
+          },
+        ),
+        body: CustomScrollView(
           slivers: [
-            // App Bar
-            SliverAppBar(
-              expandedHeight: 140,
-              floating: true,
-              pinned: true,
-              backgroundColor: AppColors.primaryDark,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
+            // SECTION 1: TITLE SECTION (VermiTrack)
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 50, 20, 25),
+                decoration: BoxDecoration(
+                  gradient: _isDarkMode
+                      ? LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.grey[850]!, Colors.grey[900]!],
+                        )
+                      : AppColors.primaryGradient,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.glowGreen.withOpacity(0.3),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.3),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.menu, color: Colors.white),
+                            onPressed: () =>
+                                _scaffoldKey.currentState?.openDrawer(),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [
+                                  Colors.white,
+                                  AppColors.glowLightGreen,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ).createShader(bounds),
+                              child: const Text(
+                                'VermiTrack',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              'Smart Farming',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        // Theme Toggle Button
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.2),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isDarkMode = !_isDarkMode;
+                              });
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Stack(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.notifications_outlined,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () => Navigator.pushNamed(
+                                  context,
+                                  '/notifications',
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ),
+                            if (_systemMetrics['alerts'] > 0)
+                              Positioned(
+                                right: 2,
+                                top: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    gradient: AppColors.dangerGradient,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.danger.withOpacity(
+                                          0.5,
+                                        ),
+                                        blurRadius: 4,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  child: Text(
+                                    '${_systemMetrics['alerts']}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+            // SECTION 2: WELCOME SECTION
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                  decoration: BoxDecoration(
+                    gradient: _isDarkMode
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Colors.grey[800]!, Colors.grey[850]!],
+                          )
+                        : AppColors.successGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.glowGreen.withOpacity(0.4),
+                        blurRadius: 15,
+                        spreadRadius: 3,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Hello, Farmer! 👨🏻‍🌾',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 8,
+                              color: Colors.black26,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'What would you like to monitor today?',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+            // SECTION 3: OVERVIEW CARDS
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildOverviewCard(
+                      label: 'Worms',
+                      value: '${_systemMetrics['totalWorms']}',
+                      imagePath: 'assets/images/worm.gif',
+                      color: Colors.amber,
+                      isDarkMode: _isDarkMode,
+                    ),
+                    _buildOverviewCard(
+                      label: 'Compost',
+                      value: '${_systemMetrics['totalCompost']}kg',
+                      icon: Icons.scale,
+                      color: AppColors.glowLightGreen,
+                      isDarkMode: _isDarkMode,
+                    ),
+                    _buildOverviewCard(
+                      label: 'Active',
+                      value: _systemMetrics['activeTime'],
+                      icon: Icons.timer,
+                      color: AppColors.infoLight,
+                      isDarkMode: _isDarkMode,
+                    ),
+                    _buildOverviewCard(
+                      label: 'Efficiency',
+                      value: '${_systemMetrics['efficiency']}%',
+                      icon: Icons.speed,
+                      color: const Color.fromARGB(255, 16, 176, 11),
+                      isDarkMode: _isDarkMode,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+            // System Metrics Cards
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Live Metrics',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: _isDarkMode
+                            ? Colors.white
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    height: 60,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: 4,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: _buildMetricCard(index, _isDarkMode),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Status Overview',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: _isDarkMode
+                            ? Colors.white
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+            // Status Overview Cards
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  childAspectRatio: 0.9,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 8,
+                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final statuses = [
+                    {
+                      'title': 'Active',
+                      'icon': Icons.play_circle,
+                      'color': AppColors.success,
+                      'gradient': AppColors.successGradient,
+                      'count': runningBeds,
+                      'badge': 'Running',
+                    },
+                    {
+                      'title': 'Need Water',
+                      'icon': Icons.water_drop,
+                      'color': AppColors.warning,
+                      'gradient': AppColors.warningGradient,
+                      'count': dryingBeds,
+                      'badge': 'Warning',
+                    },
+                    {
+                      'title': 'Ready',
+                      'icon': Icons.check_circle,
+                      'color': AppColors.info,
+                      'gradient': AppColors.infoGradient,
+                      'count': doneBeds,
+                      'badge': 'Harvest',
+                    },
+                    {
+                      'title': 'Issues',
+                      'icon': Icons.warning,
+                      'color': AppColors.danger,
+                      'gradient': AppColors.dangerGradient,
+                      'count': errorBeds,
+                      'badge': 'Critical',
+                    },
+                  ];
+
+                  final status = statuses[index];
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: _isDarkMode
+                          ? null
+                          : LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: (status['gradient'] as LinearGradient)
+                                  .colors
+                                  .map((c) => c.withOpacity(0.1))
+                                  .toList(),
+                            ),
+                      color: _isDarkMode ? Colors.grey[850] : null,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (status['color'] as Color).withOpacity(0.3),
+                          blurRadius: 12,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: (status['color'] as Color).withOpacity(0.1),
+                          blurRadius: 20,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned(
+                          top: 6,
+                          right: 2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: (status['color'] as Color).withOpacity(
+                                0.15,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: (status['color'] as Color).withOpacity(
+                                  0.3,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              status['badge'] as String,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: status['color'] as Color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                status['icon'] as IconData,
+                                color: status['color'] as Color,
+                                size: 15,
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                status['title'] as String,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: _isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                '${status['count']}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: status['color'] as Color,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }, childCount: 4),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+            // How is your compost today? Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Dashboard',
+                    Text(
+                      'How is your compost today?',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        color: _isDarkMode
+                            ? Colors.white
+                            : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$totalBeds Beds • $runningBeds Running',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.normal,
+                      'Smart recommendations based on bed activity',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _isDarkMode
+                            ? Colors.grey[400]
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
-                background: Container(
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+            // AI Recommendation Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [AppColors.primaryDark, AppColors.primary],
+                      colors: _isDarkMode
+                          ? [
+                              Colors.cyan.withOpacity(0.15),
+                              Colors.blue.withOpacity(0.05),
+                            ]
+                          : [
+                              AppColors.primary.withOpacity(0.1),
+                              AppColors.info.withOpacity(0.05),
+                            ],
                     ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: (_isDarkMode ? Colors.cyan : AppColors.primary)
+                          .withOpacity(0.3),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_isDarkMode ? Colors.cyan : AppColors.primary)
+                            .withOpacity(0.2),
+                        blurRadius: 15,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withOpacity(0.5),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.auto_awesome,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'AI Compost Assistant',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: _isDarkMode
+                                  ? Colors.white
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: _isDarkMode
+                                ? Colors.grey[300]
+                                : AppColors.textPrimary,
+                            height: 1.4,
+                          ),
+                          children: [
+                            const TextSpan(text: 'Perfect conditions! '),
+                            TextSpan(
+                              text: '$runningBeds running',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.success,
+                              ),
+                            ),
+                            const TextSpan(text: ' beds and '),
+                            TextSpan(
+                              text: '$dryingBeds need water',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.warning,
+                              ),
+                            ),
+                            const TextSpan(
+                              text:
+                                  '. Current temperature 28°C is ideal for decomposition.\n\n',
+                            ),
+                            const TextSpan(
+                              text:
+                                  'Recommendations: Water drying beds, harvest ready beds, and check error bed sensors.',
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _buildActionChip(
+                            'View Details',
+                            Icons.analytics,
+                            AppColors.primary,
+                            _isDarkMode,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildActionChip(
+                            'Take Action',
+                            Icons.touch_app,
+                            AppColors.info,
+                            _isDarkMode,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
-              actions: [
-                // Time range selector
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.calendar_today),
-                  onSelected: (value) {
-                    setState(() {
-                      _selectedTimeRange = value;
-                    });
-                  },
-                  itemBuilder: (context) {
-                    return _timeRanges.map((range) {
-                      return PopupMenuItem(value: range, child: Text(range));
-                    }).toList();
-                  },
-                ),
-                // Notifications with badge
-                Stack(
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+            // Farm Statistics
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined),
-                      onPressed: () {},
+                    Text(
+                      'Farm Statistics',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: _isDarkMode
+                            ? Colors.white
+                            : AppColors.textPrimary,
+                      ),
                     ),
-                    if (_systemMetrics['alerts'] > 0)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: AppColors.danger,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            '${_systemMetrics['alerts']}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                    const SizedBox(height: 18),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.5,
+                      children: [
+                        _buildQuickStatCard(
+                          'Total Worms',
+                          '${_systemMetrics['totalWorms']}',
+                          Icons.psychology,
+                          AppColors.primary,
+                          '+230 today',
+                          _isDarkMode,
+                        ),
+                        _buildQuickStatCard(
+                          'Compost Ready',
+                          '${_systemMetrics['totalCompost']} kg',
+                          Icons.scale,
+                          AppColors.success,
+                          '${doneBeds} beds ready',
+                          _isDarkMode,
+                        ),
+                        _buildQuickStatCard(
+                          'Active Time',
+                          _systemMetrics['activeTime'],
+                          Icons.timer,
+                          AppColors.info,
+                          '${_systemMetrics['efficiency']}% efficiency',
+                          _isDarkMode,
+                        ),
+                        _buildQuickStatCard(
+                          'Tasks',
+                          '${_systemMetrics['tasks']}',
+                          Icons.task_alt,
+                          AppColors.warning,
+                          '3 due soon',
+                          _isDarkMode,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+            // Your Beds Section
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Your Beds',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: _isDarkMode
+                            ? Colors.white
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {},
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(40, 20),
+                      ),
+                      child: Text(
+                        'View All',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _isDarkMode
+                              ? AppColors.glowNeon
+                              : AppColors.primary,
                         ),
                       ),
-                  ],
-                ),
-              ],
-            ),
-
-            // System Metrics Cards
-            SliverToBoxAdapter(
-              child: Container(
-                height: 100,
-                margin: const EdgeInsets.all(12),
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 4,
-                  itemBuilder: (context, index) {
-                    return _buildMetricCard(index);
-                  },
-                ),
-              ),
-            ),
-
-            // Status Overview
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatusOverviewCard(
-                        'Running',
-                        runningBeds,
-                        totalBeds,
-                        AppColors.success,
-                        Icons.play_circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildStatusOverviewCard(
-                        'Drying',
-                        dryingBeds,
-                        totalBeds,
-                        AppColors.warning,
-                        Icons.water,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildStatusOverviewCard(
-                        'Done',
-                        doneBeds,
-                        totalBeds,
-                        AppColors.info,
-                        Icons.check_circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildStatusOverviewCard(
-                        'Error',
-                        errorBeds,
-                        totalBeds,
-                        AppColors.danger,
-                        Icons.error,
-                      ),
                     ),
                   ],
                 ),
               ),
             ),
 
-            // Quick Stats Grid
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 2.2,
-                  children: [
-                    _buildQuickStatCard(
-                      'Total Worms',
-                      '${_systemMetrics['totalWorms']}',
-                      Icons.psychology,
-                      AppColors.primary,
-                      '+230 today',
-                    ),
-                    _buildQuickStatCard(
-                      'Compost Ready',
-                      '${_systemMetrics['totalCompost']} kg',
-                      Icons.scale,
-                      AppColors.success,
-                      '${doneBeds} beds ready',
-                    ),
-                    _buildQuickStatCard(
-                      'Active Time',
-                      _systemMetrics['activeTime'],
-                      Icons.timer,
-                      AppColors.info,
-                      '92% efficiency',
-                    ),
-                    _buildQuickStatCard(
-                      'Tasks',
-                      '${_systemMetrics['tasks']}',
-                      Icons.task_alt,
-                      AppColors.warning,
-                      '3 due soon',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Beds Grid Title
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(12, 8, 12, 4),
-                child: Text(
-                  'Your Beds',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
             // Beds Grid
             SliverPadding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 1.1,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.4,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final bedData = _mockBeds[index];
                   final bed = BedModel.fromJson(bedData);
-
-                  // Add extra fields for dashboard
                   final healthScore = bedData['healthScore'] ?? 85;
                   final worms = bedData['worms'] ?? 800;
 
@@ -481,36 +1047,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        color: _isDarkMode
+                            ? AppColors.surfaceDark
+                            : AppColors.surface,
+                        borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 10,
+                            color: _getStatusColor(bed.status).withOpacity(0.3),
+                            blurRadius: 12,
+                            spreadRadius: 2,
                             offset: const Offset(0, 4),
                           ),
+                          BoxShadow(
+                            color: _getStatusColor(bed.status).withOpacity(0.1),
+                            blurRadius: 20,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 2),
+                          ),
                         ],
-                        border: Border.all(
-                          color: _getStatusColor(bed.status).withOpacity(0.3),
-                          width: 1.5,
-                        ),
                       ),
                       child: Stack(
                         children: [
                           // Health Score Badge
                           Positioned(
-                            top: 8,
-                            right: 8,
+                            top: 6,
+                            right: 6,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
+                                horizontal: 4,
+                                vertical: 1,
                               ),
                               decoration: BoxDecoration(
-                                color: _getHealthColor(
-                                  healthScore,
-                                ).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    _getHealthColor(
+                                      healthScore,
+                                    ).withOpacity(0.15),
+                                    _getHealthColor(
+                                      healthScore,
+                                    ).withOpacity(0.05),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: _getHealthColor(
                                     healthScore,
@@ -529,7 +1107,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Text(
                                     '$healthScore%',
                                     style: TextStyle(
-                                      fontSize: 9,
+                                      fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                       color: _getHealthColor(healthScore),
                                     ),
@@ -538,30 +1116,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ),
                           ),
-
                           Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(5),
                             child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Bed Name and Status
+                                // Bed Name
                                 Row(
                                   children: [
                                     Container(
                                       width: 8,
-                                      height: 8,
+                                      height: 10,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         color: _getStatusColor(bed.status),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: _getStatusColor(
+                                              bed.status,
+                                            ).withOpacity(0.5),
+                                            blurRadius: 4,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
                                       ),
                                     ),
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
                                         bed.name,
-                                        style: const TextStyle(
-                                          fontSize: 14,
+                                        style: TextStyle(
+                                          fontSize: 9,
                                           fontWeight: FontWeight.w600,
+                                          color: _isDarkMode
+                                              ? Colors.white
+                                              : AppColors.textPrimary,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -569,48 +1159,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                   ],
                                 ),
-
                                 const SizedBox(height: 8),
-
                                 // Temperature and Moisture
                                 Row(
                                   children: [
-                                    _buildMiniSensor(
+                                    _buildBedStat(
                                       Icons.thermostat,
                                       '${bed.temperature.toStringAsFixed(0)}°',
                                       _getTempColor(bed.temperature),
                                     ),
                                     const SizedBox(width: 8),
-                                    _buildMiniSensor(
+                                    _buildBedStat(
                                       Icons.water_drop,
                                       '${bed.moisture.toStringAsFixed(0)}%',
                                       _getMoistureColor(bed.moisture),
                                     ),
                                   ],
                                 ),
-
-                                const SizedBox(height: 8),
-
+                                const SizedBox(height: 6),
                                 // Layer and Worms
                                 Row(
                                   children: [
-                                    _buildMiniInfo(
+                                    _buildBedStat(
                                       Icons.layers,
                                       'L${bed.currentLayer}/${bed.totalLayers}',
                                       AppColors.info,
                                     ),
                                     const SizedBox(width: 8),
-                                    _buildMiniInfo(
+                                    _buildBedStat(
                                       Icons.psychology,
                                       '$worms',
                                       AppColors.primary,
                                     ),
                                   ],
                                 ),
-
-                                const Spacer(),
-
-                                // Last Fed and Progress
+                                const SizedBox(height: 10),
+                                // Last Fed and Day
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -618,25 +1202,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     Text(
                                       bedData['lastFed'] ?? 'Unknown',
                                       style: TextStyle(
-                                        fontSize: 9,
-                                        color: AppColors.textSecondary,
+                                        fontSize: 10,
+                                        color: _isDarkMode
+                                            ? Colors.grey[500]
+                                            : AppColors.textSecondary,
                                       ),
                                     ),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
+                                        horizontal: 4,
+                                        vertical: 1,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: _getStatusColor(
-                                          bed.status,
-                                        ).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            _getStatusColor(
+                                              bed.status,
+                                            ).withOpacity(0.15),
+                                            _getStatusColor(
+                                              bed.status,
+                                            ).withOpacity(0.05),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
                                         'Day ${bed.compostDay}',
                                         style: TextStyle(
-                                          fontSize: 8,
+                                          fontSize: 10,
                                           fontWeight: FontWeight.w600,
                                           color: _getStatusColor(bed.status),
                                         ),
@@ -658,15 +1251,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Recent Activity and Tasks
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(20),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Recent Activity
-                    Expanded(child: _buildActivityCard()),
-                    const SizedBox(width: 12),
-                    // Upcoming Tasks
-                    Expanded(child: _buildTasksCard()),
+                    Expanded(child: _buildActivityCard(_isDarkMode)),
+                    const SizedBox(width: 15),
+                    Expanded(child: _buildTasksCard(_isDarkMode)),
                   ],
                 ),
               ),
@@ -680,12 +1271,110 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMetricCard(int index) {
+  // Light Theme
+  ThemeData _lightTheme() {
+    return ThemeData(
+      brightness: Brightness.light,
+      primarySwatch: Colors.green,
+      scaffoldBackgroundColor: AppColors.background,
+      cardTheme: CardThemeData(
+        elevation: 4,
+        shadowColor: AppColors.shadowLight,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      useMaterial3: true,
+    );
+  }
+
+  // Dark Theme
+  ThemeData _darkTheme() {
+    return ThemeData(
+      brightness: Brightness.dark,
+      primarySwatch: Colors.green,
+      scaffoldBackgroundColor: AppColors.backgroundDark,
+      cardTheme: CardThemeData(
+        elevation: 4,
+        shadowColor: AppColors.glowGreen.withOpacity(0.2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      useMaterial3: true,
+    );
+  }
+
+  // Small Overview Card
+  Widget _buildOverviewCard({
+    required String label,
+    required String value,
+    String? imagePath,
+    IconData? icon,
+    required Color color,
+    required bool isDarkMode,
+  }) {
+    return Container(
+      width: 70,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.15),
+            Colors.white.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          imagePath != null
+              ? Image.asset(
+                  imagePath,
+                  width: 22,
+                  height: 22,
+                  fit: BoxFit.contain,
+                )
+              : Icon(icon, color: const Color.fromARGB(255, 0, 0, 0), size: 16),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color.fromARGB(255, 0, 0, 0),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color.fromARGB(179, 0, 0, 0),
+              fontSize: 9,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Metric Card
+  Widget _buildMetricCard(int index, bool isDarkMode) {
     final metrics = [
       {
         'icon': Icons.sensors,
         'label': 'Active Beds',
-        'value': '4/6',
+        'value':
+            '${_mockBeds.where((b) => b['conveyorRunning'] == true).length}/6',
         'color': AppColors.success,
       },
       {
@@ -712,103 +1401,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Container(
       width: 120,
-      margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? AppColors.surfaceDark : AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            metric['icon'] as IconData,
-            color: metric['color'] as Color,
-            size: 18,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            metric['value'] as String,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: metric['color'] as Color,
-            ),
-          ),
-          Text(
-            metric['label'] as String,
-            style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusOverviewCard(
-    String label,
-    int count,
-    int total,
-    Color color,
-    IconData icon,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(height: 4),
-          Text(
-            count.toString(),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(fontSize: 9, color: AppColors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickStatCard(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-    String subtitle,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: (metric['color'] as Color).withOpacity(0.3),
+            blurRadius: 10,
+            spreadRadius: 2,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -817,31 +1419,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              gradient: LinearGradient(
+                colors: [
+                  (metric['color'] as Color).withOpacity(0.2),
+                  (metric['color'] as Color).withOpacity(0.1),
+                ],
+              ),
               borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: (metric['color'] as Color).withOpacity(0.3),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
-            child: Icon(icon, color: color, size: 16),
+            child: Icon(
+              metric['icon'] as IconData,
+              color: metric['color'] as Color,
+              size: 16,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  value,
+                  metric['value'] as String,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: color,
+                    color: metric['color'] as Color,
                   ),
                 ),
                 Text(
-                  label,
-                  style: TextStyle(fontSize: 9, color: AppColors.textSecondary),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 8, color: AppColors.textSecondary),
+                  metric['label'] as String,
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: isDarkMode
+                        ? Colors.grey[400]
+                        : AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -851,18 +1471,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMiniSensor(IconData icon, String value, Color color) {
-    return Expanded(
+  // Quick Stat Card
+  Widget _buildQuickStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    String subtitle,
+    bool isDarkMode,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDarkMode ? AppColors.surfaceDark : AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 8,
+            spreadRadius: 1,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: color,
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color.withOpacity(0.2), color.withOpacity(0.1)],
+              ),
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDarkMode
+                        ? Colors.grey[400]
+                        : AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDarkMode
+                        ? Colors.grey[500]
+                        : AppColors.textDisabled,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -870,29 +1552,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMiniInfo(IconData icon, String value, Color color) {
+  // Bed Stat
+  Widget _buildBedStat(IconData icon, String value, Color color) {
     return Expanded(
       child: Row(
         children: [
-          Icon(icon, size: 10, color: color),
+          Icon(icon, size: 13, color: color),
           const SizedBox(width: 2),
-          Text(value, style: TextStyle(fontSize: 10, color: color)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[800],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActivityCard() {
+  // Action Chip
+  Widget _buildActionChip(
+    String label,
+    IconData icon,
+    Color color,
+    bool isDarkMode,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withOpacity(0.2), color.withOpacity(0.1)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 6,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Activity Card
+  Widget _buildActivityCard(bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDarkMode
+              ? [Colors.white.withOpacity(0.05), Colors.white.withOpacity(0.02)]
+              : [Colors.white.withOpacity(0.95), Colors.white.withOpacity(0.9)],
+        ),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: (isDarkMode ? Colors.cyan : AppColors.primary).withOpacity(
+              0.15,
+            ),
+            blurRadius: 10,
+            spreadRadius: 2,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -902,9 +1647,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Recent Activity',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                ),
               ),
               TextButton(
                 onPressed: () {},
@@ -912,12 +1661,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding: EdgeInsets.zero,
                   minimumSize: const Size(40, 20),
                 ),
-                child: const Text('View All'),
+                child: Text(
+                  'View All',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDarkMode ? AppColors.glowNeon : AppColors.primary,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          ..._recentActivities.take(4).map((activity) {
+          ..._recentActivities.take(3).map((activity) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
@@ -925,32 +1680,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: (activity['color'] as Color).withOpacity(0.1),
+                      gradient: LinearGradient(
+                        colors: [
+                          (activity['color'] as Color).withOpacity(0.2),
+                          (activity['color'] as Color).withOpacity(0.1),
+                        ],
+                      ),
                       shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: (activity['color'] as Color).withOpacity(0.3),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
                     child: Icon(
                       activity['icon'] as IconData,
-                      size: 12,
+                      size: 10,
                       color: activity['color'] as Color,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           activity['action'],
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: TextStyle(
+                            fontSize: 11,
                             fontWeight: FontWeight.w500,
+                            color: isDarkMode
+                                ? Colors.white
+                                : AppColors.textPrimary,
                           ),
                         ),
                         Text(
                           '${activity['bed']} • ${activity['time']}',
                           style: TextStyle(
-                            fontSize: 9,
-                            color: AppColors.textSecondary,
+                            fontSize: 8,
+                            color: isDarkMode
+                                ? Colors.grey[500]
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -965,17 +1737,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildTasksCard() {
+  // Tasks Card
+  Widget _buildTasksCard(bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDarkMode
+              ? [Colors.white.withOpacity(0.05), Colors.white.withOpacity(0.02)]
+              : [Colors.white.withOpacity(0.95), Colors.white.withOpacity(0.9)],
+        ),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: (isDarkMode ? Colors.cyan : AppColors.primary).withOpacity(
+              0.15,
+            ),
+            blurRadius: 10,
+            spreadRadius: 2,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -985,54 +1771,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Upcoming Tasks',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDarkMode ? Colors.white : AppColors.textPrimary,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
+                  gradient: AppColors.warningGradient,
                   borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.warning.withOpacity(0.3),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
                 child: Text(
-                  '${_systemMetrics['tasks']} tasks',
-                  style: TextStyle(fontSize: 9, color: AppColors.warning),
+                  '${_systemMetrics['tasks']}',
+                  style: const TextStyle(
+                    fontSize: 9,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          ..._upcomingTasks.map((task) {
+          ..._upcomingTasks.take(3).map((task) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
                   Container(
                     width: 2,
-                    height: 30,
+                    height: 24,
                     decoration: BoxDecoration(
-                      color: task['color'] as Color,
+                      gradient: LinearGradient(
+                        colors: [
+                          task['color'] as Color,
+                          (task['color'] as Color).withOpacity(0.5),
+                        ],
+                      ),
                       borderRadius: BorderRadius.circular(1),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (task['color'] as Color).withOpacity(0.3),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           task['task'],
-                          style: const TextStyle(
-                            fontSize: 11,
+                          style: TextStyle(
+                            fontSize: 10,
                             fontWeight: FontWeight.w500,
+                            color: isDarkMode
+                                ? Colors.white
+                                : AppColors.textPrimary,
                           ),
                         ),
                         Text(
                           '${task['bed']} • ${task['due']}',
                           style: TextStyle(
-                            fontSize: 9,
-                            color: AppColors.textSecondary,
+                            fontSize: 8,
+                            color: isDarkMode
+                                ? Colors.grey[500]
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -1040,17 +1858,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
+                      horizontal: 4,
+                      vertical: 1,
                     ),
                     decoration: BoxDecoration(
-                      color: (task['color'] as Color).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      gradient: LinearGradient(
+                        colors: [
+                          (task['color'] as Color).withOpacity(0.2),
+                          (task['color'] as Color).withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       task['priority'],
                       style: TextStyle(
-                        fontSize: 8,
+                        fontSize: 7,
                         fontWeight: FontWeight.w600,
                         color: task['color'] as Color,
                       ),
